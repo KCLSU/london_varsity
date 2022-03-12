@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import ScrollIntoView from './ScrollIntoView';
 
-const Upcoming = ({ isDesktop }) => {
-  const [events, setEvents] = useState([]);
+const Upcoming = ({ isDesktop, events = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleChange = (e) => {
@@ -24,39 +23,28 @@ const Upcoming = ({ isDesktop }) => {
     )}`;
   }
 
-  useEffect(() => {
-    fetch(
-      `https://www.kclsu.org/svc/feeds/events/6013?subtree=true&types=varsity`
-    )
-      .then((res) => {
-        if (!res.ok) throw new Error(res.statusText);
-        return res.json();
-      })
-      .then((data) => {
-        setEvents(data);
-      })
-      .catch((er) => {
-        console.log(er);
-        throw new Error(er);
-      });
-  }, []);
+  let evts = [];
+  if (events.length > 0) {
+    const filtered =
+      !searchTerm || searchTerm === ''
+        ? events
+        : events.filter((obj) => obj.Title.includes(searchTerm));
 
-  const filtered =
-    !searchTerm || searchTerm === ''
-      ? events
-      : events.filter((obj) => obj.Title.includes(searchTerm));
-  const evts = filtered.map((evt) => (
-    <ScrollIntoView key={evt.Id}>
-      <label-card
-        cardtitle={evt.Title}
-        image={evt.ImageUrl}
-        link={evt.Url}
-        text={getDateTime(evt.StartDate)}
-        margin="15px 0"
-        cardheight={isDesktop ? '130px' : 'auto'}
-      />
-    </ScrollIntoView>
-  ));
+    evts = filtered.map((evt) => (
+      <ScrollIntoView key={evt.Id}>
+        <label-card
+          cardtitle={evt.Title}
+          withleftborder={false}
+          // boxshadow="rgb(225 37 27 / 53%) 3px 3px 1px 0px"
+          image={evt.ImageUrl}
+          link={evt.Url}
+          text={getDateTime(evt.StartDate)}
+          margin="15px 0"
+          cardheight={isDesktop ? '130px' : 'auto'}
+        />
+      </ScrollIntoView>
+    ));
+  }
 
   return (
     <div className="flex flex-col justify-start w-full">
@@ -83,6 +71,14 @@ const Upcoming = ({ isDesktop }) => {
 
 Upcoming.propTypes = {
   isDesktop: PropTypes.bool.isRequired,
+  events: PropTypes.arrayOf(
+    PropTypes.shape({
+      Title: PropTypes.string,
+      ImageUrl: PropTypes.string,
+      Url: PropTypes.string,
+      StartDate: PropTypes.string,
+    })
+  ),
 };
 
 export default Upcoming;
